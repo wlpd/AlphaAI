@@ -1,0 +1,65 @@
+import sys
+import alphai
+from PyQt5.QtWidgets import QMainWindow, QLabel, QPushButton, QVBoxLayout, QApplication, QWidget
+from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtCore import Qt
+from time import sleep
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("PyQt5 GUI")
+        self.setGeometry(0, 0, 500, 500)
+
+        layout = QVBoxLayout()
+
+        start_button = QPushButton("Start")
+        start_button.clicked.connect(self.window)
+        layout.addWidget(start_button)
+
+        stop_button = QPushButton("Stop")
+        stop_button.clicked.connect(self.stop_window)
+        layout.addWidget(stop_button)
+
+        self.label = QLabel()
+        layout.addWidget(self.label)
+
+        self.status_label = QLabel()
+        self.status_label.setFixedSize(50, 50)
+        self.status_label.setAutoFillBackground(True)
+        layout.addWidget(self.status_label)
+
+        central_widget = QWidget(self)
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
+        self.running = True
+
+    def window(self):
+        try:
+            alphai.set_camera("64x48")
+            while self.running:
+                sleep(2)
+                image = alphai.get_camera()
+                image_reduite = image[10:]
+                line = image_reduite[4]
+                pixel = line[3]
+                print('rouge', pixel[0], 'vert', pixel[1], 'bleu', pixel[2])
+                if pixel[1] > pixel[0] and pixel[1] > pixel[2]:
+                    self.label.setText("C'est vert")
+                    self.status_label.setStyleSheet("QLabel { background-color : green; }")
+                else:
+                    self.status_label.setStyleSheet("QLabel { background-color : red; }")
+        except Exception as e:
+            self.label.setText("Une erreur est survenue: {}".format(e))
+
+    def stop_window(self):
+        self.running = False
+
+
+app = QApplication(sys.argv)
+window = MainWindow()
+window.show()
+sys.exit(app.exec_())
